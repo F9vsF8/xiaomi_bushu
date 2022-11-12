@@ -5,9 +5,9 @@
 [![GitHub stars](https://img.shields.io/github/stars/xunichanghuan/mimotion?style=flat-square)](https://github.com/xunichanghuan/mimotion/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/xunichanghuan/mimotion?style=flat-square)](https://github.com/xunichanghuan/mimotion/issues)
 
-# 小米运动自动刷步数
+# 11111
 
-> 小米运动自动刷步数
+> 111111
 
 ## Github Actions 部署指南
 
