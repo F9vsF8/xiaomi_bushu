@@ -292,7 +292,7 @@ def push(title, content):
         print(skey == "NO")
         return
     else:
-        url = "http://www.pushplus.plus/send
+        url = "http://www.pushplus.plus/send"
     data = {
         "token":  + skey,
         "title": 小米步数刷新成功,
