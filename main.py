@@ -295,14 +295,15 @@ def push(title, content):
         url = "http://www.pushplus.plus/send"
     data = {
         "token":  + skey,
-        "title": 小米步数刷新成功,
-        "content": html
+        "title": title,
+        "content": content,
     }
     body = json.dumps(data).encode(encoding="utf-8")
     headers = {"Content-Type": "application/json"}
     res = res.post(url=url, data=body, headers=headers).json()
         # 输出发送结果
-        print(res)
+        if response["code"] == 200:
+        print("PUSHPLUS 推送成功！")
 
 
 # 推送server
