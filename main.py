@@ -292,10 +292,15 @@ def push(title, content):
         print(skey == "NO")
         return
     else:
-        url = "http://www.pushplus.plus/send?&template=html&token=" + skey
-        data = title + "\n" + content
-        # 发送请求
-        res = requests.post(url=url, data=data.encode('utf-8')).text
+        url = "http://www.pushplus.plus/send
+    data = {
+        "token":  + skey,
+        "title": 小米步数刷新成功,
+        "content": html
+    }
+    body = json.dumps(data).encode(encoding="utf-8")
+    headers = {"Content-Type": "application/json"}
+    res = requests.post(url=url, data=body, headers=headers).json()
         # 输出发送结果
         print(res)
 
