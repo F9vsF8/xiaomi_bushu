@@ -300,7 +300,7 @@ def push(title, content):
     }
     body = json.dumps(data).encode(encoding="utf-8")
     headers = {"Content-Type": "application/json"}
-    res = requests.post(url=url, data=body, headers=headers).json()
+    res = res.post(url=url, data=body, headers=headers).json()
         # 输出发送结果
         print(res)
 
