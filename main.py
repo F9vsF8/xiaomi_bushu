@@ -300,8 +300,8 @@ def push(title, content):
     }
     body = json.dumps(data).encode(encoding="utf-8")
     headers = {"Content-Type": "application/json"}
-    res = res.post(url=url, data=body, headers=headers).json()
-    if res["code"] == 200:
+    res = requests.post(url=url, data=body, headers=headers).json()
+    if requests["code"] == 200:
         print("PUSHPLUS 推送成功！")
 
 
