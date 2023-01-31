@@ -294,7 +294,7 @@ def push(title, content):
     else:
         url = "http://www.pushplus.plus/send"
     data = {
-        "token":  + skey,
+        "token": ｛skey},
         "title": title,
         "content": content,
     }
