@@ -286,23 +286,17 @@ def get_app_token(login_token):
     return app_token
 
 
-#发送pushplus
+#发送酷推
 def push(title, content):
     if skey == "NO":
-        print(skey == "NO")
         return
     else:
-        url = "http://www.pushplus.plus/send"
-    data = {
-        "token": '{skey}',
-        "title": title,
-        "content": content,
-    }
-    body = json.dumps(data).encode(encoding="utf-8")
-    headers = {"Content-Type": "application/json"}
-    res = requests.post(url=url, data=body, headers=headers).json()
-    if requests["code"] == 200:
-        print("PUSHPLUS 推送成功！")
+        url = "https://push.xuthus.cc/send/" + skey
+        data = title + "\n" + content
+        # 发送请求
+        res = requests.post(url=url, data=data.encode('utf-8')).text
+        # 输出发送结果
+        print(res)
 
 
 # 推送server
