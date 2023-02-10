@@ -1,8 +1,5 @@
 # -*- coding: utf8 -*-
 import requests, time, datetime, re,sys, json, random
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
 
 # 设置开始
 # 用户名（格式为 13800138000）
@@ -35,26 +32,26 @@ area = sys.argv[13]
 # 以下如果看不懂直接默认就行只需改上面
 
 # 系数K查询到天气后降低步数比率，如查询得到设置地区为多云天气就会在随机后的步数乘0.9作为最终修改提交的步数
-K_dict = {"多云": 1.0, "阴": 1.0, "小雨": 0.9, "中雨": 0.8, "大雨": 0.7, "暴雨": 0.6, "大暴雨": 0.5, "特大暴雨": 0.4}
+K_dict = {"多云": 0.9, "阴": 0.8, "小雨": 0.7, "中雨": 0.5, "大雨": 0.4, "暴雨": 0.3, "大暴雨": 0.2, "特大暴雨": 0.2}
 
 # 设置运行程序时间点,24小时制（不要设置0，1，2可能会发生逻辑错误），这边设置好云函数触发里也要改成相同的小时运行，与time_list列表对应，如默认：30 0 8,10,13,15,17,19,21 * * * *，不会的改8,10,13,15,17,19,21就行替换成你要运行的时间点，其它复制
 # 默认表示为8点10点13点15点17点19点21点运行,如需修改改time_list列表，如改成：time_list = [7, 9, 13, 15, 17, 19, 20]就表示为7点9点13点15点17点19点20点运行，云函数触发里面也要同步修改
 # 说白了不是刷七次嘛,你希望在什么时候刷,设七个时间点，不要该成0，1，2（就是不要设置0点1点2点运行），其它随便改。如果要刷的次数小于7次多余的时间点不用改保持默认就行如只需要4次就改前4个，但函数触发里面要改成4个的，不能用7个的
-time_list = [8, 10, 12, 14, 16, 18, 20]
+time_list = [8, 10, 13, 15, 17, 19, 21]
 
 # 设置运行结果推送不推送与上面时间一一对应，如：set_push列表内的第一个值与time_list列表内的第一个时间点对应，该值单独控制该时间点的推送与否（默认表示为21点（就是设置的最后一个时间点）推送其余时间运行不推送结果）
 # 也是改列表内的False不推送，True推送，每个对应上面列表的一个时间点，如果要刷的次数小于7次同样改前几个其它默认
-set_push = [False, False, False, False, False, False, True]
+set_push = [True, True, True, True, True, True, True]
 
 # 最小步数（如果只需要刷步的次数少于7次就将该次数以后的步数全都改成0，如：time_list[3]: 0，表示第五次开始不运行或者直接云函数触发里面不在该时间调用均可（建议用后者））
-min_dict = {time_list[0]: 400, time_list[1]: 2000, time_list[2]: 5000, time_list[3]: 7000, time_list[4]: 10000, time_list[5]: 14000, time_list[6]: 18000}
+min_dict = {time_list[0]: 6000, time_list[1]: 10000, time_list[2]: 20000, time_list[3]: 30000, time_list[4]: 40000, time_list[5]: 50000, time_list[6]: 60000}
 # 最大步数（例如现在设置意思是在8点（你设置的第一个时间点默认8）运行会在1500到2999中随机生成一个数提交（开启气候降低步数会乘系数K）10点3000~4999。。。以此类推，步数范围建议看懂了再改，没看懂直接默认就好）
-max_dict = {time_list[0]: 1999, time_list[1]: 4999, time_list[2]: 6999, time_list[3]: 9999, time_list[4]: 12999, time_list[5]: 16999, time_list[6]: 20999}
+max_dict = {time_list[0]: 9999, time_list[1]: 19999, time_list[2]: 29999, time_list[3]: 39999, time_list[4]: 49999, time_list[5]: 59999, time_list[6]: 69999}
 # 设置结束
 #now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 # 北京时间
-#time_bj = datetime.datetime.today() + datetime.timedelta(hours=8)
-#now = time_bj.strftime("%Y-%m-%d %H:%M:%S")
+time_bj = datetime.datetime.today() + datetime.timedelta(hours=8)
+now = time_bj.strftime("%Y-%m-%d %H:%M:%S")
 headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)'}
 
 
@@ -65,29 +62,29 @@ def getWeather():
         return
     else:
         global K, type
-        url = 'http://wthrcdn.etouch.cn/weather_mini?city=' + area
+        url = 'http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&needMoreData=true&pageNo=1&pageSize=7&city='+ area
         hea = {'User-Agent': 'Mozilla/5.0'}
         r = requests.get(url=url, headers=hea)
         if r.status_code == 200:
             result = r.text
             res = json.loads(result)
-            if "多云" in res['data']['forecast'][0]['type']:
+            if "多云" in res['data']['list'][0]['weather']:
                 K = K_dict["多云"]
-            elif "阴" in res['data']['forecast'][0]['type']:
+            elif "阴" in res['data']['list'][0]['weather']:
                 K = K_dict["阴"]
-            elif "小雨" in res['data']['forecast'][0]['type']:
+            elif "小雨" in res['data']['list'][0]['weather']:
                 K = K_dict["小雨"]
-            elif "中雨" in res['data']['forecast'][0]['type']:
+            elif "中雨" in res['data']['list'][0]['weather']:
                 K = K_dict["中雨"]
-            elif "大雨" in res['data']['forecast'][0]['type']:
+            elif "大雨" in res['data']['list'][0]['weather']:
                 K = K_dict["大雨"]
-            elif "暴雨" in res['data']['forecast'][0]['type']:
+            elif "暴雨" in res['data']['list'][0]['weather']:
                 K = K_dict["暴雨"]
-            elif "大暴雨" in res['data']['forecast'][0]['type']:
+            elif "大暴雨" in res['data']['list'][0]['weather']:
                 K = K_dict["大暴雨"]
-            elif "特大暴雨" in res['data']['forecast'][0]['type']:
+            elif "特大暴雨" in res['data']['list'][0]['weather']:
                 K = K_dict["特大暴雨"]
-            type = res['data']['forecast'][0]['type']
+            type = res['data']['list'][0]['weather']
         else:
             print("获取天气情况出错")
 
@@ -97,52 +94,56 @@ def getBeijinTime():
     global K, type
     K = 1.0
     type = ""
-    SHA_TZ = timezone(timedelta(hours=8),name='Asia/Shanghai',)
-    utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
-    beijing_now = utc_now.astimezone(SHA_TZ)
-    result = (beijing_now.strftime('%H'))
-    print(result)
-    if str(time_list[0]) == result:
-        a = set_push[0]
-        min_1 = min_dict[time_list[0]]
-        max_1 = max_dict[time_list[0]]
-    elif str(time_list[1]) == result:
-        a = set_push[1]
-        min_1 = min_dict[time_list[1]]
-        max_1 = max_dict[time_list[1]]
-    elif str(time_list[2]) == result:
-        a = set_push[2]
-        min_1 = min_dict[time_list[2]]
-        max_1 = max_dict[time_list[2]]
-    elif str(time_list[3]) == result:
-        a = set_push[3]
-        min_1 = min_dict[time_list[3]]
-        max_1 = max_dict[time_list[3]]
-    elif str(time_list[4]) == result:
-        a = set_push[4]
-        min_1 = min_dict[time_list[4]]
-        max_1 = max_dict[time_list[4]]
-    elif str(time_list[5]) == result:
-        a = set_push[5]
-        min_1 = min_dict[time_list[5]]
-        max_1 = max_dict[time_list[5]]
-    elif str(time_list[6]) == result:
-        a = set_push[6]
-        min_1 = min_dict[time_list[6]]
-        max_1 = max_dict[time_list[6]]
-    else:
-        a = False
-        min_1 = 0
-        max_1 = 0
-        if step1 != "":
-            min_1 = 1
-            max_1 = 1
+    hea = {'User-Agent': 'Mozilla/5.0'}
+    url = r'https://www.beijing-time.org/t/time.asp'
+    if open_get_weather == "True":
+        getWeather()
+    r = requests.get(url=url, headers=hea)
+    if r.status_code == 200:
+        result = r.text
+        #print(result)
+        if "nhrs=" + str(time_list[0]) in result:
+            a = set_push[0]
+            min_1 = min_dict[time_list[0]]
+            max_1 = max_dict[time_list[0]]
+        elif "nhrs=" + str(time_list[1]) in result:
+            a = set_push[1]
+            min_1 = min_dict[time_list[1]]
+            max_1 = max_dict[time_list[1]]
+        elif "nhrs=" + str(time_list[2]) in result:
+            a = set_push[2]
+            min_1 = min_dict[time_list[2]]
+            max_1 = max_dict[time_list[2]]
+        elif "nhrs=" + str(time_list[3]) in result:
+            a = set_push[3]
+            min_1 = min_dict[time_list[3]]
+            max_1 = max_dict[time_list[3]]
+        elif "nhrs=" + str(time_list[4]) in result:
+            a = set_push[4]
+            min_1 = min_dict[time_list[4]]
+            max_1 = max_dict[time_list[4]]
+        elif "nhrs=" + str(time_list[5]) in result:
+            a = set_push[5]
+            min_1 = min_dict[time_list[5]]
+            max_1 = max_dict[time_list[5]]
+        elif "nhrs=" + str(time_list[6]) in result:
+            a = set_push[6]
+            min_1 = min_dict[time_list[6]]
+            max_1 = max_dict[time_list[6]]
+        else:
+            a = False
+            min_1 = 0
+            max_1 = 0
+            if step1 != "":
+                min_1 = 1
+                max_1 = 1
         if step1 != "":
             a = True
-            min_1 = int(K * min_1)
-            max_1 = int(K * max_1)
+        min_1 = int(K * min_1)
+        max_1 = int(K * max_1)
+    else:
+        print("获取北京时间失败")
         return
-
     if min_1 != 0 and max_1 != 0:
         user_mi = sys.argv[1]
         # 登录密码
@@ -154,15 +155,15 @@ def getBeijinTime():
                 msg_mi =  "由于天气" + type + "，已设置降低步数,系数为" + str(K) + "。\n" 
             else:
                 msg_mi = ""
-        for user_mi, passwd_mi in zip(user_list, passwd_list):
-            msg_mi += main(user_mi,passwd_mi,min_1, max_1)
-            #print(msg_mi)
-        if a:
-           push('【小米运动步数修改】', msg_mi)
-           push_wx(msg_mi)
-           run(msg_mi)
-        else:
-           print("此次修改结果不推送")
+            for user_mi, passwd_mi in zip(user_list, passwd_list):
+                msg_mi += main(user_mi,passwd_mi,min_1, max_1)
+                #print(msg_mi)
+            if a:
+               push('【小米运动步数修改】', msg_mi)
+               push_wx(msg_mi)
+               run(msg_mi)
+            else:
+               print("此次修改结果不推送")
     else:
         print("当前不是主人设定的提交步数时间或者主人设置了0步数呢，本次不提交")
         return
@@ -262,7 +263,7 @@ def main(_user,_passwd,min_1, max_1):
 
     response = requests.post(url, data=data, headers=head).json()
     # print(response)
-    result = f"账号：{user[:3]}****{user[7:]}\n修改步数（{step}）[" + response['message'] + "]\n"
+    result = f"[{now}]\n账号：{user[:3]}****{user[7:]}\n修改步数（{step}）[" + response['message'] + "]\n"
     #print(result)
     return result
 
