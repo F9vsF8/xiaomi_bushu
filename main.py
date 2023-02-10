@@ -4,7 +4,7 @@ import requests, time, datetime, re,sys, json, random
 # 设置开始
 # 用户名（格式为 13800138000）
 
-# 酷推skey和server酱sckey和企业微信设置，只用填一个其它留空即可
+# pushplus和server酱sckey和企业微信设置，只用填一个其它留空即可
 skey = sys.argv[3]
 # 推送server酱
 sckey = sys.argv[4]
@@ -289,7 +289,6 @@ def get_app_token(login_token):
 #发送酷推
 def push(title, content):
     if skey == "NO":
-        print(skey == "NO")
         return
     else:
         url = "https://push.xuthus.cc/send/" + skey
