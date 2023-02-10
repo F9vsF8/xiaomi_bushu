@@ -1,10 +1,10 @@
 # -*- coding: utf8 -*-
-import requests, time, re,sys, json, random
+import requests, time, datetime, re,sys, json, random
 
 # 设置开始
 # 用户名（格式为 13800138000）
 
-# 酷推skey和server酱sckey和企业微信设置，只用填一个其它留空即可
+# pushplus和server酱sckey和企业微信设置，只用填一个其它留空即可
 skey = sys.argv[3]
 # 推送server酱
 sckey = sys.argv[4]
@@ -44,42 +44,49 @@ time_list = [8, 10, 13, 15, 17, 19, 21]
 set_push = [True, True, True, True, True, True, True]
 
 # 最小步数（如果只需要刷步的次数少于7次就将该次数以后的步数全都改成0，如：time_list[3]: 0，表示第五次开始不运行或者直接云函数触发里面不在该时间调用均可（建议用后者））
-min_dict = {time_list[0]: 400, time_list[1]: 10000, time_list[2]: 20000, time_list[3]: 30000, time_list[4]: 40000, time_list[5]: 50000, time_list[6]: 60000}
+min_dict = {time_list[0]: 6000, time_list[1]: 10000, time_list[2]: 20000, time_list[3]: 30000, time_list[4]: 40000, time_list[5]: 50000, time_list[6]: 60000}
 # 最大步数（例如现在设置意思是在8点（你设置的第一个时间点默认8）运行会在1500到2999中随机生成一个数提交（开启气候降低步数会乘系数K）10点3000~4999。。。以此类推，步数范围建议看懂了再改，没看懂直接默认就好）
 max_dict = {time_list[0]: 9999, time_list[1]: 19999, time_list[2]: 29999, time_list[3]: 39999, time_list[4]: 49999, time_list[5]: 59999, time_list[6]: 69999}
 # 设置结束
-now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+#now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+# 北京时间
+time_bj = datetime.datetime.today() + datetime.timedelta(hours=8)
+now = time_bj.strftime("%Y-%m-%d %H:%M:%S")
 headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)'}
 
 
 #获取区域天气情况
 def getWeather():
-    global K, type
-    url = 'http://wthrcdn.etouch.cn/weather_mini?city=' + area
-    hea = {'User-Agent': 'Mozilla/5.0'}
-    r = requests.get(url=url, headers=hea)
-    if r.status_code == 200:
-        result = r.text
-        res = json.loads(result)
-        if "多云" in res['data']['forecast'][0]['type']:
-            K = K_dict["多云"]
-        elif "阴" in res['data']['forecast'][0]['type']:
-            K = K_dict["阴"]
-        elif "小雨" in res['data']['forecast'][0]['type']:
-            K = K_dict["小雨"]
-        elif "中雨" in res['data']['forecast'][0]['type']:
-            K = K_dict["中雨"]
-        elif "大雨" in res['data']['forecast'][0]['type']:
-            K = K_dict["大雨"]
-        elif "暴雨" in res['data']['forecast'][0]['type']:
-            K = K_dict["暴雨"]
-        elif "大暴雨" in res['data']['forecast'][0]['type']:
-            K = K_dict["大暴雨"]
-        elif "特大暴雨" in res['data']['forecast'][0]['type']:
-            K = K_dict["特大暴雨"]
-        type = res['data']['forecast'][0]['type']
+    if area == "NO":
+        print(area == "NO")
+        return
     else:
-        print("获取天气情况出错")
+        global K, type
+        url = 'http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&needMoreData=true&pageNo=1&pageSize=7&city='+ area
+        hea = {'User-Agent': 'Mozilla/5.0'}
+        r = requests.get(url=url, headers=hea)
+        if r.status_code == 200:
+            result = r.text
+            res = json.loads(result)
+            if "多云" in res['data']['list'][0]['weather']:
+                K = K_dict["多云"]
+            elif "阴" in res['data']['list'][0]['weather']:
+                K = K_dict["阴"]
+            elif "小雨" in res['data']['list'][0]['weather']:
+                K = K_dict["小雨"]
+            elif "中雨" in res['data']['list'][0]['weather']:
+                K = K_dict["中雨"]
+            elif "大雨" in res['data']['list'][0]['weather']:
+                K = K_dict["大雨"]
+            elif "暴雨" in res['data']['list'][0]['weather']:
+                K = K_dict["暴雨"]
+            elif "大暴雨" in res['data']['list'][0]['weather']:
+                K = K_dict["大暴雨"]
+            elif "特大暴雨" in res['data']['list'][0]['weather']:
+                K = K_dict["特大暴雨"]
+            type = res['data']['list'][0]['weather']
+        else:
+            print("获取天气情况出错")
 
 
 #获取北京时间确定随机步数&启动主函数
@@ -88,8 +95,8 @@ def getBeijinTime():
     K = 1.0
     type = ""
     hea = {'User-Agent': 'Mozilla/5.0'}
-    url = r'http://time1909.beijing-time.org/time.asp'
-    if open_get_weather:
+    url = r'https://www.beijing-time.org/t/time.asp'
+    if open_get_weather == "True":
         getWeather()
     r = requests.get(url=url, headers=hea)
     if r.status_code == 200:
@@ -143,9 +150,20 @@ def getBeijinTime():
         passwd_mi = sys.argv[2]
         user_list = user_mi.split('#')
         passwd_list = passwd_mi.split('#')
-        if len(user_list) == len(passwd_list):
+        if len(user_list) == len(passwd_list):        
+            if K != 1.0:
+                msg_mi =  "由于天气" + type + "，已设置降低步数,系数为" + str(K) + "。\n" 
+            else:
+                msg_mi = ""
             for user_mi, passwd_mi in zip(user_list, passwd_list):
-                main(user_mi,passwd_mi,min_1, max_1, a)     
+                msg_mi += main(user_mi,passwd_mi,min_1, max_1)
+                #print(msg_mi)
+            if a:
+               push('【小米运动步数修改】', msg_mi)
+               push_wx(msg_mi)
+               run(msg_mi)
+            else:
+               print("此次修改结果不推送")
     else:
         print("当前不是主人设定的提交步数时间或者主人设置了0步数呢，本次不提交")
         return
@@ -203,7 +221,7 @@ def login(user, password):
 
 
 # 主函数
-def main(_user,_passwd,min_1, max_1, a):
+def main(_user,_passwd,min_1, max_1):
     user = str(_user)
     password = str(_passwd)
     step = str(step1)
@@ -245,17 +263,8 @@ def main(_user,_passwd,min_1, max_1, a):
 
     response = requests.post(url, data=data, headers=head).json()
     # print(response)
-    _add = ""
-    if K != 1.0:
-        _add =  type + "，已设置降低步数,系数为" + str(K) + "。\n" 
-    result = f"[{now}]\n账号：{user}\n由于天气{_add} 修改步数（{step}）\n" + response['message']
-    print(result)
-    if a:
-        push('【小米运动步数修改】', result)
-        push_wx(result)
-        run(result)
-    else:
-        print("此次修改结果不推送")
+    result = f"[{now}]\n账号：{user[:3]}****{user[7:]}\n修改步数（{step}）[" + response['message'] + "]\n"
+    #print(result)
     return result
 
 
@@ -293,6 +302,7 @@ def push(title, content):
 # 推送server
 def push_wx(desp=""):
     if sckey == 'NO':
+        print(sckey == "NO")
         return
     else:
         server_url = f"https://sc.ftqq.com/{sckey}.send"
@@ -314,7 +324,7 @@ def get_access_token():
 
 
 def run(msg):
-    if position:
+    if position == "true":
         data = {
             "touser": touser,
             "toparty": toparty,
@@ -333,17 +343,13 @@ def run(msg):
         req_urls = req_url + get_access_token()
         resp = requests.post(url=req_urls, data=data).text
         print(resp)
+        #print(data)
         return resp
     else:
         return
 
-
-
-
-
 def main_handler(event, context):
     getBeijinTime()
-
 
 if __name__ == "__main__":
     getBeijinTime()
